@@ -1,58 +1,74 @@
-document.addEventListener('toggle', (e) => {
-  const el = e.target;
-  if (!el.matches('menu[popover]')) return;
+/**
+ * lmui - Dropdown Component
+ * Provides positioning, keyboard navigation, and ARIA state management.
+ *
+ * Usage:
+ * <lm-dropdown>
+ *   <button popovertarget="menu-id">Options</button>
+ *   <menu popover id="menu-id">
+ *     <button role="menuitem">Item 1</button>
+ *     <button role="menuitem">Item 2</button>
+ *   </menu>
+ * </lm-dropdown>
+ */
 
-  const handle = document.querySelector(`[popovertarget="${el.id}"]`);
+class LMDropdown extends LMBase {
+  #menu;
+  #trigger;
+  #position;
 
-  const position = () => {
-    const rect = handle.getBoundingClientRect();
-    el.style.top = `${rect.bottom}px`;
-    el.style.left = `${rect.left}px`;
-  };
+  init() {
+    this.#menu = this.$('menu[popover]');
+    this.#trigger = this.$('[popovertarget]');
 
-  if (e.newState === 'open') {
-    position();
-    window.addEventListener('scroll', position, true);
-    el._cleanup = () => window.removeEventListener('scroll', position, true);
-    el.querySelector('[role="menuitem"]')?.focus();
+    if (!this.#menu || !this.#trigger) return;
 
-    handle?.setAttribute('aria-expanded', 'true');
-  } else {
-    el._cleanup?.();
-    handle?.setAttribute('aria-expanded', 'false');
-    handle?.focus();
+    this.#menu.addEventListener('toggle', this);
+    this.#menu.addEventListener('keydown', this);
+
+    this.#position = () => {
+      // Position has to be calculated and applied manually because
+      // popover positioning is like fixed, relative to the window.
+      const rect = this.#trigger.getBoundingClientRect();
+      this.#menu.style.top = `${rect.bottom}px`;
+      this.#menu.style.left = `${rect.left}px`;
+    };
   }
-}, true);
 
-document.addEventListener('keydown', (e) => {
-  const item = e.target;
-  if (!item.matches('[role="menuitem"]')) return;
-
-  const el = item.closest('menu[popover]');
-  if (!el?.matches(':popover-open')) return;
-
-  const items = [...el.querySelectorAll('[role="menuitem"]')];
-  const index = items.indexOf(item);
-
-  switch (e.key) {
-    case 'ArrowDown':
-      e.preventDefault();
-      items[(index + 1) % items.length]?.focus();
-      break;
-
-    case 'ArrowUp':
-      e.preventDefault();
-      items[index - 1 < 0 ? items.length - 1 : index - 1]?.focus();
-      break;
-
-    case 'Home':
-      e.preventDefault();
-      items[0]?.focus();
-      break;
-
-    case 'End':
-      e.preventDefault();
-      items[items.length - 1]?.focus();
-      break;
+  ontoggle(e) {
+    if (e.newState === 'open') {
+      this.#position();
+      window.addEventListener('scroll', this.#position, true);
+      this.$('[role="menuitem"]')?.focus();
+      this.#trigger.ariaExpanded = 'true';
+    } else {
+      window.removeEventListener('scroll', this.#position, true);
+      this.#trigger.ariaExpanded = 'false';
+      this.#trigger.focus();
+    }
   }
-});
+
+  onkeydown(e) {
+    if (!e.target.matches('[role="menuitem"]')) return;
+
+    const items = this.$$('[role="menuitem"]');
+    const idx = items.indexOf(e.target);
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        items[(idx + 1) % items.length]?.focus();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        items[idx - 1 < 0 ? items.length - 1 : idx - 1]?.focus();
+        break;
+    }
+  }
+
+  cleanup() {
+    window.removeEventListener('scroll', this.#position, true);
+  }
+}
+
+customElements.define('lm-dropdown', LMDropdown);

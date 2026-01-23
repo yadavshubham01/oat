@@ -102,9 +102,11 @@
       <a href="/" style="text-decoration: none; color: inherit;">lmui</a>
     </h4>
     <nav>
-      <a href="/">Home</a>
-      <a href="/usage/">Usage</a>
-      <a href="/customizing/">Customizing</a>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/usage/">Usage</a></li>
+        <li><a href="/customizing/">Customizing</a></li>
+        <li>
       <details open>
         <summary>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -115,14 +117,16 @@
           </svg>
           Components
         </summary>
-        <div>
+            <ul>
           {% set components = get_section(path="components/_index.md") %}
           {% for page in components.pages %}
-          <a href="/components/#{{ page.slug }}">{{ page.title }}
-            {% if page.extra.webcomponent | default(value=false) %}<small>WebComponent</small>{% endif %}</a>
+              <li><a href="/components/#{{ page.slug }}">{{ page.title }}
+                {% if page.extra.webcomponent | default(value=false) %}<small>WebComponent</small>{% endif %}</a></li>
           {% endfor %}
-        </div>
+            </ul>
       </details>
+        </li>
+      </ul>
     </nav>
     <div style="margin-top: auto; padding-top: var(--space-4);">
       <button class="outline sm" style="width: 100%;" onclick="toggleTheme()">Toggle Dark mode</button>
